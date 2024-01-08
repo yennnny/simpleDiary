@@ -1,9 +1,11 @@
 import "./App.css";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
-import Lifecycle from "./Lifecycle";
-import Lifecycle2 from "./Lifecycle2";
+// import Lifecycle from "./Lifecycle";
+// import Lifecycle2 from "./Lifecycle2";
+
+// https://jsonplaceholder.typicode.com/comments
 
 // const dummyList = [
 //   {
@@ -47,6 +49,28 @@ function App() {
   const [data, setData] = useState([]);
 
   const dataId = useRef(0);
+
+  const getData = async () => {
+    const res = await fetch(
+      "https://jsonplaceholder.typicode.com/comments"
+    ).then((res) => res.json());
+
+    const initData = res.slice(0, 21).map((it) => {
+      return {
+        author: it.email,
+        content: it.body,
+        emotion: Math.floor(Math.random() * 5) + 1,
+        created_date: new Date().getTime(),
+        id: dataId.current++,
+      };
+    });
+
+    setData(initData);
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
 
   // 일기 데이터 추가하기
   const onCreate = (author, content, emotion) => {
