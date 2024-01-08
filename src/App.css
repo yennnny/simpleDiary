@@ -59,4 +59,16 @@
 .DiaryItem .content{
   background-color: #ffffff99;
   padding: 20px;
+  margin-bottom: 10px;
+}
+.DiaryItem .btnEditBox button{
+  width: calc(50% - 4px);
+  margin: 0 2px;
+  padding: .5em 0;
+  border: none;
+  background-color: #b49d62;
+  color: #fff;
+}
+.DiaryItem .btnEditBox .btnEditCancle{
+  background-color: #d85041;
 }
