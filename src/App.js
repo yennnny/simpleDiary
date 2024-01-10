@@ -1,11 +1,11 @@
 import "./App.css";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
 // import Lifecycle from "./Lifecycle";
 // import Lifecycle2 from "./Lifecycle2";
-
-// https://jsonplaceholder.typicode.com/comments
+// import OptimizeTest from "./OptimizeTest";
+// import OptimizeTest2 from "./OptimizeTest2";
 
 // const dummyList = [
 //   {
@@ -55,7 +55,7 @@ function App() {
       "https://jsonplaceholder.typicode.com/comments"
     ).then((res) => res.json());
 
-    const initData = res.slice(0, 21).map((it) => {
+    const initData = res.slice(0, 20).map((it) => {
       return {
         author: it.email,
         content: it.body,
@@ -73,7 +73,7 @@ function App() {
   }, []);
 
   // 일기 데이터 추가하기
-  const onCreate = (author, content, emotion) => {
+  const onCreate = useCallback((author, content, emotion) => {
     const created_date = new Date().getTime();
     const newItem = {
       author,
@@ -83,28 +83,44 @@ function App() {
       id: dataId.current,
     };
     dataId.current += 1;
-    setData([newItem, ...data]);
-  };
+    setData((data) => [newItem, ...data]);
+  }, []);
 
   // 일기 데이터 삭제하기
-  const onRemove = (tgId) => {
-    console.log(tgId + "가 삭제되었습니다");
-    const newDiaryList = data.filter((it) => it.id !== tgId);
-    setData(newDiaryList);
-  };
+  const onRemove = useCallback((tgId) => {
+    setData((data) => data.filter((it) => it.id !== tgId));
+  }, []);
 
   // 일기 데이터 수정하기
-  const onEdit = (tgId, newCnt) => {
-    setData(
+  const onEdit = useCallback((tgId, newCnt) => {
+    setData((data) =>
       data.map((it) => (it.id === tgId ? { ...it, content: newCnt } : it))
     );
-  };
+  }, []);
+
+  // useMemo 사용한 데이터 분석
+  const getDiaryAnalysis = useMemo(() => {
+    const goodCount = data.filter((it) => it.emotion >= 3).length;
+    const badCount = data.length - goodCount;
+    const goodRatio = (goodCount / data.length) * 100;
+    return { goodCount, badCount, goodRatio };
+  }, [data.length]);
+
+  const { goodCount, badCount, goodRatio } = getDiaryAnalysis; // getDiaryAnalysis() 하지 않는다. useMemo는 값으로 return 받기 때문이다.
 
   return (
     <div className="App">
       {/* <Lifecycle /> */}
       {/* <Lifecycle2 /> */}
+      {/* <OptimizeTest /> */}
+      {/* <OptimizeTest2 /> */}
       <DiaryEditor onCreate={onCreate} />
+      <div>
+        <p>전체 일기: {data.length}</p>
+        <p>기분 좋은 일기 개수: {goodCount}</p>
+        <p>기분 나쁜 일기 개수: {badCount}</p>
+        <p>기분 좋은 일기 비율: {goodRatio}</p>
+      </div>
       <DiaryList diaryList={data} onRemove={onRemove} onEdit={onEdit} />
     </div>
   );
