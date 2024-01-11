@@ -1,5 +1,5 @@
 import "./App.css";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
 // import Lifecycle from "./Lifecycle";
@@ -7,46 +7,38 @@ import DiaryList from "./DiaryList";
 // import OptimizeTest from "./OptimizeTest";
 // import OptimizeTest2 from "./OptimizeTest2";
 
-// const dummyList = [
-//   {
-//     id: 1,
-//     author: "데니",
-//     content: "보통날",
-//     emotion: 5,
-//     created_date: new Date().getTime(),
-//   },
-//   {
-//     id: 2,
-//     author: "호영",
-//     content: "보통날",
-//     emotion: 5,
-//     created_date: new Date().getTime(),
-//   },
-//   {
-//     id: 3,
-//     author: "쭈니",
-//     content: "보통날",
-//     emotion: 5,
-//     created_date: new Date().getTime(),
-//   },
-//   {
-//     id: 4,
-//     author: "태우",
-//     content: "보통날",
-//     emotion: 5,
-//     created_date: new Date().getTime(),
-//   },
-//   {
-//     id: 5,
-//     author: "계상",
-//     content: "보통날",
-//     emotion: 5,
-//     created_date: new Date().getTime(),
-//   },
-// ];
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "INIT": {
+      return action.data;
+    }
+    case "CREATE": {
+      const created_date = new Date().getTime();
+      const newItem = {
+        ...action.data,
+        created_date,
+      };
+      return [newItem, ...state];
+    }
+    case "REMOVE": {
+      return state.filter((it) => it.id !== action.tgId);
+
+      // setData((data) => data.filter((it) => it.id !== tgId));
+    }
+    case "EDIT": {
+      return state.map((it) =>
+        it.id === action.tgid ? { ...it, content: action.newCnt } : it
+      );
+    }
+    default:
+      return state;
+  }
+};
 
 function App() {
-  const [data, setData] = useState([]);
+  // const [data, setData] = useState([]);
+
+  const [data, dispatch] = useReducer(reducer, []);
 
   const dataId = useRef(0);
 
@@ -64,8 +56,8 @@ function App() {
         id: dataId.current++,
       };
     });
-
-    setData(initData);
+    dispatch({ type: "INIT", data: initData });
+    // setData(initData);
   };
 
   useEffect(() => {
@@ -74,28 +66,39 @@ function App() {
 
   // 일기 데이터 추가하기
   const onCreate = useCallback((author, content, emotion) => {
-    const created_date = new Date().getTime();
-    const newItem = {
-      author,
-      content,
-      emotion,
-      created_date,
-      id: dataId.current,
-    };
+    dispatch({
+      type: "CREATE",
+      data: { author, content, emotion, id: dataId.current },
+    });
+
+    // const created_date = new Date().getTime();
+    // const newItem = {
+    //   author,
+    //   content,
+    //   emotion,
+    //   created_date,
+    //   id: dataId.current,
+    // };
     dataId.current += 1;
-    setData((data) => [newItem, ...data]);
+    // setData((data) => [newItem, ...data]);
   }, []);
 
   // 일기 데이터 삭제하기
   const onRemove = useCallback((tgId) => {
-    setData((data) => data.filter((it) => it.id !== tgId));
+    dispatch({ type: "REMOVE", tgId });
+    // setData((data) => data.filter((it) => it.id !== tgId));
   }, []);
 
   // 일기 데이터 수정하기
   const onEdit = useCallback((tgId, newCnt) => {
-    setData((data) =>
-      data.map((it) => (it.id === tgId ? { ...it, content: newCnt } : it))
-    );
+    dispatch({
+      type: "EDIT",
+      tgId,
+      newCnt,
+    });
+    // setData((data) =>
+    //   data.map((it) => (it.id === tgId ? { ...it, content: newCnt } : it))
+    // );
   }, []);
 
   // useMemo 사용한 데이터 분석
