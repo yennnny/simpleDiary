@@ -1,5 +1,11 @@
 import "./App.css";
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+} from "react";
 import DiaryEditor from "./DiaryEditor";
 import DiaryList from "./DiaryList";
 // import Lifecycle from "./Lifecycle";
@@ -34,6 +40,10 @@ const reducer = (state, action) => {
       return state;
   }
 };
+
+export const DiaryStateContext = React.createContext();
+
+export const DiaryDispatchContext = React.createContext();
 
 function App() {
   // const [data, setData] = useState([]);
@@ -101,6 +111,10 @@ function App() {
     // );
   }, []);
 
+  const memoizedDispatches = useMemo(() => {
+    return { onCreate, onRemove, onEdit };
+  }, []); // App 컴포넌트가 재생성이 될 때 memoizedDispatches도 재생성므로 useMemo로 재생성 되지 않도록 묶어준다.
+
   // useMemo 사용한 데이터 분석
   const getDiaryAnalysis = useMemo(() => {
     const goodCount = data.filter((it) => it.emotion >= 3).length;
@@ -112,20 +126,25 @@ function App() {
   const { goodCount, badCount, goodRatio } = getDiaryAnalysis; // getDiaryAnalysis() 하지 않는다. useMemo는 값으로 return 받기 때문이다.
 
   return (
-    <div className="App">
-      {/* <Lifecycle /> */}
-      {/* <Lifecycle2 /> */}
-      {/* <OptimizeTest /> */}
-      {/* <OptimizeTest2 /> */}
-      <DiaryEditor onCreate={onCreate} />
-      <div>
-        <p>전체 일기: {data.length}</p>
-        <p>기분 좋은 일기 개수: {goodCount}</p>
-        <p>기분 나쁜 일기 개수: {badCount}</p>
-        <p>기분 좋은 일기 비율: {goodRatio}</p>
-      </div>
-      <DiaryList diaryList={data} onRemove={onRemove} onEdit={onEdit} />
-    </div>
+    // Provider도 하나의 컴포넌트 이기때문에 value값이 바뀌게되면 계속해서 재생성된다. 따라서 value에 data와 onCreate, onEdit, onRemove를 같이 사용할 수 없게 된다. - data가 바뀌면 onCreate, onEdit, onRemove가 재생성되기 때문. 그래서 새로운 Provider를 새로 생성.
+    <DiaryStateContext.Provider value={data}>
+      <DiaryDispatchContext.Provider value={memoizedDispatches}>
+        <div className="App">
+          {/* <Lifecycle /> */}
+          {/* <Lifecycle2 /> */}
+          {/* <OptimizeTest /> */}
+          {/* <OptimizeTest2 /> */}
+          <DiaryEditor onCreate={onCreate} />
+          <div>
+            <p>전체 일기: {data.length}</p>
+            <p>기분 좋은 일기 개수: {goodCount}</p>
+            <p>기분 나쁜 일기 개수: {badCount}</p>
+            <p>기분 좋은 일기 비율: {goodRatio}</p>
+          </div>
+          <DiaryList />
+        </div>
+      </DiaryDispatchContext.Provider>
+    </DiaryStateContext.Provider>
   );
 }
 
